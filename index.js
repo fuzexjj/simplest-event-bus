@@ -1,6 +1,28 @@
+const EventBus = {
+    channels: {},
+    subscribe(channelName, cb) {
+        if (!this.channels[channelName]) {
+            this.channels[channelName] = []
+        }
+
+        this.channels[channelName].push(cb)
+    },
+    publish(channelName, data) {
+        if (!this.channels[channelName]) {
+            throw new Error('Chanel does not exist')
+        }
+
+        this.channels[channelName].forEach((cb) => cb(data))
+    },
+}
+
 class Mailer {
-    sendEmail() {
-        console.log('Email sent to the user')
+    constructor() {
+        EventBus.subscribe('order/new', this.sendEmail)
+    }
+
+    sendEmail(data) {
+        console.log(`Email sent to the user. Ordered item: ${data}`)
     }
 }
 
@@ -11,26 +33,11 @@ class Order {
 
     send() {
         console.log(`Order was sent to the store. Ordered item: ${this.itemName}`)
+        EventBus.publish('order/new', this.itemName)
     }
 }
 
-class EventBus {
-    channels = {}
-
-    subscribe(channelName, cb) {
-        if (!this.channels[channelName]) {
-            this.channels[channelName] = []
-        }
-
-        this.channels[channelName].push(cb)
-    }
-
-    publish(channelName) {
-        if (!this.channels[channelName]) {
-            throw new Error('No one is subscribed to this channel')
-        }
-    }
-}
-
+const mailer = new Mailer()
 const order = new Order('Apple')
+
 order.send()
